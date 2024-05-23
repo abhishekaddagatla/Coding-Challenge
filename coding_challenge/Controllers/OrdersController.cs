@@ -30,17 +30,24 @@ namespace coding_challenge.Controllers
             return await _context.Orders.ToListAsync();
         }
 
+        [HttpGet("SearchOrders/{id}")]
+        public async Task<ActionResult<IEnumerable<Order>>> SearchOrders(string id)
+        {
+            return await _context.Orders.Where(e => e.Id.Equals(Guid.Parse(id))).ToListAsync();
+        }
+
         // PUT: api/HandleOrders/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut]
         public async Task<IActionResult> PutOrder(Guid id, int type, string customerName, string username)
         {
             var order = _context.Orders.FirstOrDefault(e => e.Id.Equals(id));
-            
-            if (order == null) {
+
+            if (order == null)
+            {
                 return NotFound();
             }
-            
+
             order.Type = (OrderType)type;
             order.CustomerName = customerName;
             order.CreatedByUsername = username;
@@ -54,7 +61,8 @@ namespace coding_challenge.Controllers
         [HttpPost]
         public async Task<ActionResult<Order>> PostOrder(int type, string customerName, string username)
         {
-            if (type < 0 || type > 4) {
+            if (type < 0 || type > 4)
+            {
                 return BadRequest();
             }
             Guid guid = Guid.NewGuid();
@@ -71,21 +79,40 @@ namespace coding_challenge.Controllers
         }
 
         [HttpGet("ByType/{type}")]
-        public async Task<ActionResult<IEnumerable<Order>>> ByType(OrderType type) {
+        public async Task<ActionResult<IEnumerable<Order>>> ByType(OrderType type)
+        {
             return await _context.Orders.Where(x => x.Type == type).ToListAsync();
         }
 
-        [HttpPost("Delete/{id}")]
-        public async void Delete(Guid id) {
-            if (!OrderExists(id)) {
-                return;
+        [HttpPost("Delete/{ids}")]
+        public async Task<IActionResult> Delete(string ids)
+        {
+            var idArray = ids.Split(',');
+            foreach (string stringId in idArray)
+            {
+                if (Guid.TryParse(stringId, out Guid id))
+                {
+                    if (!OrderExists(id))
+                    {
+                        continue;
+                    }
+
+                    Order deletingOrder = await _context.Orders.FirstOrDefaultAsync(e => e.Id == id);
+                    if (deletingOrder != null)
+                    {
+                        _context.Orders.Remove(deletingOrder);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                else
+                {
+                    return BadRequest($"Invalid ID format: {stringId}");
+                }
             }
-            Order deletingOrder = await _context.Orders.FindAsync(id);
-            if (deletingOrder != null) {
-                _context.Orders.Remove(deletingOrder);
-                await _context.SaveChangesAsync();
-            }
+
+            return NoContent();
         }
+
 
         private bool OrderExists(Guid id)
         {

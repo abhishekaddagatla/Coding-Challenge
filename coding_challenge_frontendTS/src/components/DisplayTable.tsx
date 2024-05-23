@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, GridRowSelectionModel, GridToolbar } from '@mui/x-data-grid';
+import { Order } from './ParentComponent';
 
 const columns = [
   { field: 'id', headerName: 'Order ID', sortable: false, width: 300 },
@@ -9,34 +9,23 @@ const columns = [
   { field: 'customerName', headerName: 'Customer', sortable: false, width: 175 },
 ];
 
-export default function DisplayTable() {
-  const [rows, setRows] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("https://localhost:7298/api/Orders");
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        const data = await response.json();
-        console.log(data);
-        setRows(data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
+interface DisplayTableProps {
+  data: Order[];
+  changeSelection: React.Dispatch<React.SetStateAction<GridRowSelectionModel>>;
+}
 
-    fetchData();
-  }, []);
-
+export default function DisplayTable({ data, changeSelection }: DisplayTableProps) {
   return (
     <div style={{ height: '100%', width: '100%' }}>
       <DataGrid
-        rows={rows}
+        rows={data}
         columns={columns}
         pageSizeOptions={[5, 10]}
         checkboxSelection
+        disableRowSelectionOnClick
+        onRowSelectionModelChange={changeSelection}
+        sx={{ '&, [class^=MuiDataGrid]': { border: 'none' } }}
       />
     </div>
   );

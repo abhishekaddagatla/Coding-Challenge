@@ -27,63 +27,53 @@ const orderTypes = [
     { value: 'ReturnOrder', label: 'Return Order' },
 ];
 
-export default function BasicModal() {
+export default function CreateOrderModal({ refetch }: { refetch: () => void }) {
     const [open, setOpen] = useState(false);
     const [customer, setCustomer] = useState('');
     const [orderType, setOrderType] = useState('');
 
     const handleOpen = () => {
-      setCustomer(''); // Reset customer state
-      setOrderType(''); // Reset order type state
-      setOpen(true);
+        setCustomer(''); // Reset customer state
+        setOrderType(''); // Reset order type state
+        setOpen(true);
     };
     const handleClose = () => setOpen(false);
     const handleCustomerChange = (event: React.ChangeEvent<HTMLInputElement>) => setCustomer(event.target.value);
     const handleOrderTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => setOrderType(event.target.value);
 
     function getOrderTypeInt(orderType: string): number {
-      const orderTypeMap: { [key: string]: number } = {
-          'Standard': 0,
-          'SaleOrder': 1,
-          'PurchaseOrder': 2,
-          'TransferOrder': 3,
-          'ReturnOrder': 4
-      };
-  
-      return orderTypeMap[orderType] ?? -1;
-  }
+        const orderTypeMap: { [key: string]: number } = {
+            'Standard': 0,
+            'SaleOrder': 1,
+            'PurchaseOrder': 2,
+            'TransferOrder': 3,
+            'ReturnOrder': 4
+        };
+
+        return orderTypeMap[orderType] ?? -1;
+    }
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         // Handle form submission logic here
-        const currentDateTime = new Date().toLocaleString()
         const user = "Abhi"
         const formData = {
-          type: getOrderTypeInt(orderType.replace(/\s/g, '')),
-          customerName: customer,
-          username: user
+            type: getOrderTypeInt(orderType.replace(/\s/g, '')),
+            customerName: customer,
+            username: user
         }
         const queryString = $.param(formData); // Serialize formData into a query string
-        
-        console.log('Customer: ', customer);
-        console.log('Order Type: ', getOrderTypeInt(orderType.replace(/\s/g, '')));
-        console.log('user: ', user )
-        console.log('datetime: ', currentDateTime)
-
         $.ajax({
-          type: "POST",
-          url: "https://localhost:7298/api/Orders?" + queryString,
-          success: function(response: any, statusText: string, jqXHR: JQuery.jqXHR<any>) {
-            console.log(response);
-            if (jqXHR.status === 200) {
-              // Handle success
-            } else {
-              // Handle other status codes
+            type: "POST",
+            url: "https://localhost:7298/api/Orders?" + queryString,
+            success: function () {
+                refetch();
             }
-          }
-        })
+        });
         handleClose();
     };
+
+    const isFormValid = customer !== '' && orderType !== '';
 
     return (
         <div>
@@ -122,7 +112,7 @@ export default function BasicModal() {
                                 </MenuItem>
                             ))}
                         </TextField>
-                        <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
+                        <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }} disabled={!isFormValid}>
                             Submit
                         </Button>
                     </form>
