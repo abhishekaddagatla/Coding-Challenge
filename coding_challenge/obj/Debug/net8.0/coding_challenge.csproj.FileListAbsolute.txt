@@ -506,3 +506,4 @@ c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\obj\Debug\net8.0
 c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\obj\Debug\net8.0\coding_challenge.pdb
 c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\obj\Debug\net8.0\coding_challenge.genruntimeconfig.cache
 c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\obj\Debug\net8.0\ref\coding_challenge.dll
+c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\obj\Debug\net8.0\coding_challenge.sourcelink.json

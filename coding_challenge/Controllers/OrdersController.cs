@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using coding_challenge.Models;
+using System.Numerics;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Azure.Identity;
 
 namespace coding_challenge.Controllers
 {
@@ -30,34 +33,37 @@ namespace coding_challenge.Controllers
         // PUT: api/HandleOrders/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut]
-        public async Task<IActionResult> PutOrder(Order order)
+        public async Task<IActionResult> PutOrder(Guid id, int type, string customerName, string username)
         {
-            _context.Entry(order).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
+            var order = _context.Orders.FirstOrDefault(e => e.Id.Equals(id));
+            
+            if (order == null) {
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!OrderExists(order.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            
+            order.Type = (OrderType)type;
+            order.CustomerName = customerName;
+            order.CreatedByUsername = username;
 
-            return NoContent();
+            await _context.SaveChangesAsync();
+            return Ok(order);
         }
 
         // POST: api/HandleOrders
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Order>> PostOrder(Order order)
+        public async Task<ActionResult<Order>> PostOrder(int type, string customerName, string username)
         {
+            if (type < 0 || type > 4) {
+                return BadRequest();
+            }
+            Guid guid = Guid.NewGuid();
+            OrderType orderType = (OrderType)type;
+            DateTime createdDate = DateTime.Now;
+            string createdByUsername = username;
+
+            Order order = new Order(guid, orderType, customerName, createdDate, createdByUsername);
+
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 

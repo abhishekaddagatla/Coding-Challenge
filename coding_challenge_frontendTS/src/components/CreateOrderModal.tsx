@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
+import * as $ from "jquery";
 
 const style = {
     position: 'absolute',
@@ -32,18 +33,55 @@ export default function BasicModal() {
     const [orderType, setOrderType] = useState('');
 
     const handleOpen = () => {
-      setOpen(true)
-      
+      setCustomer(''); // Reset customer state
+      setOrderType(''); // Reset order type state
+      setOpen(true);
     };
     const handleClose = () => setOpen(false);
     const handleCustomerChange = (event: React.ChangeEvent<HTMLInputElement>) => setCustomer(event.target.value);
     const handleOrderTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => setOrderType(event.target.value);
 
+    function getOrderTypeInt(orderType: string): number {
+      const orderTypeMap: { [key: string]: number } = {
+          'Standard': 0,
+          'SaleOrder': 1,
+          'PurchaseOrder': 2,
+          'TransferOrder': 3,
+          'ReturnOrder': 4
+      };
+  
+      return orderTypeMap[orderType] ?? -1;
+  }
+
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         // Handle form submission logic here
-        console.log('Customer:', customer);
-        console.log('Order Type:', orderType);
+        const currentDateTime = new Date().toLocaleString()
+        const user = "Abhi"
+        const formData = {
+          type: getOrderTypeInt(orderType.replace(/\s/g, '')),
+          customerName: customer,
+          username: user
+        }
+        const queryString = $.param(formData); // Serialize formData into a query string
+        
+        console.log('Customer: ', customer);
+        console.log('Order Type: ', getOrderTypeInt(orderType.replace(/\s/g, '')));
+        console.log('user: ', user )
+        console.log('datetime: ', currentDateTime)
+
+        $.ajax({
+          type: "POST",
+          url: "https://localhost:7298/api/Orders?" + queryString,
+          success: function(response: any, statusText: string, jqXHR: JQuery.jqXHR<any>) {
+            console.log(response);
+            if (jqXHR.status === 200) {
+              // Handle success
+            } else {
+              // Handle other status codes
+            }
+          }
+        })
         handleClose();
     };
 
