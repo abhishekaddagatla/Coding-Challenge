@@ -14,7 +14,7 @@ function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline>
-        <Container maxWidth="lg" sx={{ mt: 3 }}>
+        <Container maxWidth="xl" sx={{ mt: 3 }}>
           <ParentComponent></ParentComponent>
         </Container>
       </CssBaseline>

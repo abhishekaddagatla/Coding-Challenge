@@ -5,6 +5,7 @@ import DisplayTable from './DisplayTable';
 import CreateOrderModal from './CreateOrderModal';
 import Button from '@mui/material/Button';
 import { GridRowSelectionModel } from '@mui/x-data-grid';
+import EditOrderModal from './EditOrderModal';
 import * as $ from "jquery";
 
 
@@ -18,10 +19,10 @@ export interface Order {
 
 export enum EnumsOrdersOrderType {
     Standard = 'Standard',
-    SalesOrder = 'SalesOrder',
-    PurchaseOrder = 'PurchaseOrder',
-    TransferOrder = 'TransferOrder',
-    ReturnOrder = 'ReturnOrder'
+    SalesOrder = 'Sales Order',
+    PurchaseOrder = 'Purchase Order',
+    TransferOrder = 'Transfer Order',
+    ReturnOrder = 'Return Order'
 }
 
 const enumValues = [
@@ -39,6 +40,17 @@ function getEnumValueFromInt(intValue: number): EnumsOrdersOrderType | undefined
 export default function ParentComponent() {
     const [data, setData] = useState<Order[]>([]);
     const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
+    const [editModal, setEditModal] = useState({ OrderID: "", Customer: "", OrderType: -1, isOpen: false });
+
+    const handleEditModalClose = () => {
+        setEditModal({ OrderID: "", Customer: "", OrderType: -1, isOpen: false });
+    }
+
+    const handleEditModalOpen = (id: string, customer: string, type: number) => {
+        const modalData = { OrderID: id, Customer: customer, OrderType: type, isOpen: true };
+        setEditModal(modalData);
+        console.log(modalData)
+    }
 
     const fetchSearchedData = async (searchTerm: string) => {
         try {
@@ -132,8 +144,7 @@ export default function ParentComponent() {
         $.ajax({
             type: "POST",
             url: "https://localhost:7298/api/Orders/Delete/" + rowIds,
-            success: function (response: any, statusText: string, jqXHR: JQuery.jqXHR<any>) {
-                console.log(response);
+            success: function (jqXHR: JQuery.jqXHR<any>) {
                 if (jqXHR.status === 204) {
                     // Handle success
                     fetchData();
@@ -144,16 +155,19 @@ export default function ParentComponent() {
         })
     }
 
+
+
     return (
         <>
             <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '1rem' }}>
                 <Searchbar fetchSearchedData={fetchSearchedData} fetchAllData={fetchData} />
                 <CreateOrderModal refetch={fetchData} />
-                <Button variant="outlined" sx={{ mr: 2, flexShrink: 0 }} onClick={deleteRows}>Delete Selected</Button>
+                <Button variant="outlined" sx={{ mr: 2, flexShrink: 0 }} onClick={deleteRows} color="error" disabled={selectionModel.length == 0}>Delete Selected</Button>
                 <Dropdown fetchFilteredData={fetchFilteredData} fetchAllData={fetchData} />
             </div>
             <div>
-                <DisplayTable data={data} changeSelection={setSelectionModel} />
+                <DisplayTable data={data} changeSelection={setSelectionModel} openEditModal={handleEditModalOpen} />
+                <EditOrderModal editData={editModal} onClose={handleEditModalClose}></EditOrderModal>
             </div>
         </>
     );
