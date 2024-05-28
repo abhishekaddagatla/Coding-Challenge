@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Box, TextField, InputLabel, Select, MenuItem, FormControl, SelectChangeEvent } from '@mui/material';
+import $ from "jquery";
 
 interface EditOrderForm {
     OrderID: string;
@@ -11,9 +12,10 @@ interface EditOrderForm {
 interface EditOrderModalProps {
     editData: EditOrderForm;
     onClose: () => void;
+    refetch: () => void;
 }
 
-const EditOrderModal: React.FC<EditOrderModalProps> = ({ editData: initialEditData, onClose }) => {
+const EditOrderModal: React.FC<EditOrderModalProps> = ({ editData: initialEditData, onClose, refetch }) => {
     const [editData, setEditData] = useState<EditOrderForm>(initialEditData);
 
     useEffect(() => {
@@ -25,6 +27,19 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ editData: initialEditDa
     }
 
     const handleSave = () => {
+        // makes a put call to the api
+        $.ajax({
+            url: "https://localhost:7298/api/Orders?id=" + encodeURIComponent(editData.OrderID) + "&type=" + encodeURIComponent(editData.OrderType) + "&customerName=" + encodeURIComponent(editData.Customer) + "&username=editor",
+            type: "PUT",
+            contentType: "application/json",
+            success: function (data) {
+                console.log(data);
+                refetch();
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        });
         onClose();
     };
 

@@ -9,4 +9,12 @@ public class OrderContext : DbContext
     }
 
     public DbSet<Order> Orders { get; set; }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            // Provide a default connection string for development purposes
+            optionsBuilder.UseSqlServer("MyDbContext");
+        }
+    }
 }

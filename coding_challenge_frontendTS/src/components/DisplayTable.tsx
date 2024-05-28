@@ -1,6 +1,6 @@
 import React from 'react';
 import { DataGrid, GridColDef, GridRowSelectionModel, GridRenderCellParams } from '@mui/x-data-grid';
-import { Button } from '@mui/material';
+import { IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { Order } from './ParentComponent';
 
@@ -67,9 +67,19 @@ const DisplayTable: React.FC<DisplayTableProps> = ({ data, changeSelection, open
       sortable: false,
       width: 100,
       renderCell: (params: GridRenderCellParams) => (
-        <Button variant="text" color="primary" onClick={() => handleEdit(params.row.id, params.row.customerName, params.row.type)}>
+        <IconButton
+          color="primary"
+          onClick={() => handleEdit(params.row.id, params.row.customerName, params.row.type)}
+          sx={{
+            opacity: 0.5,
+            transition: 'opacity 0.3s ease',
+            '&:hover': {
+              opacity: 1,
+            },
+          }}
+        >
           <EditIcon />
-        </Button>
+        </IconButton>
       ),
     },
   ];
@@ -79,11 +89,26 @@ const DisplayTable: React.FC<DisplayTableProps> = ({ data, changeSelection, open
       <DataGrid
         rows={data}
         columns={columns}
-        pageSizeOptions={[5, 10]}
+        autoPageSize
         checkboxSelection
         disableRowSelectionOnClick
+        disableColumnMenu
         onRowSelectionModelChange={changeSelection}
-        sx={{ '&, [class^=MuiDataGrid]': { border: 'none' } }}
+        sx={{
+          minHeight: '600px',
+          '&, [class^=MuiDataGrid]': {
+            border: 'none'
+          },
+          '& .MuiDataGrid-cell:focus': {
+            outline: 'none',
+          },
+          '& .MuiDataGrid-columnHeader:focus': {
+            outline: 'none',
+          },
+          '& .MuiDataGrid-row:focus': {
+            outline: 'none',
+          },
+        }}
       />
     </div>
   );

@@ -9,6 +9,7 @@ using coding_challenge.Models;
 using System.Numerics;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Azure.Identity;
+using coding_challenge.DAL;
 
 namespace coding_challenge.Controllers
 {
@@ -16,24 +17,24 @@ namespace coding_challenge.Controllers
     [ApiController]
     public class OrdersController : ControllerBase
     {
-        private readonly OrderContext _context;
+        private readonly IOrderRepository orderRepository;
 
-        public OrdersController(OrderContext context)
+        public OrdersController(OrderContext context, IOrderRepository orderRepository)
         {
-            _context = context;
+            this.orderRepository = orderRepository;
         }
 
         // GET: api/HandleOrders
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
+        public async Task<List<Order>> GetOrders()
         {
-            return await _context.Orders.ToListAsync();
+            return await orderRepository.GetOrdersAsync();
         }
 
-        [HttpGet("SearchOrders/{id}")]
-        public async Task<ActionResult<IEnumerable<Order>>> SearchOrders(string id)
+        [HttpGet("SearchOrders/{customerQuery}")]
+        public async Task<ActionResult<IEnumerable<Order>>> SearchOrders(string customerQuery)
         {
-            return await _context.Orders.Where(e => e.Id.Equals(Guid.Parse(id))).ToListAsync();
+            return await orderRepository.SearchOrdersAsync(customerQuery);
         }
 
         // PUT: api/HandleOrders/5
@@ -41,19 +42,16 @@ namespace coding_challenge.Controllers
         [HttpPut]
         public async Task<IActionResult> PutOrder(Guid id, int type, string customerName, string username)
         {
-            var order = _context.Orders.FirstOrDefault(e => e.Id.Equals(id));
-
+            var order = orderRepository.GetOrderById(id);
             if (order == null)
             {
                 return NotFound();
             }
 
-            order.Type = (OrderType)type;
-            order.CustomerName = customerName;
-            order.CreatedByUsername = username;
-
-            await _context.SaveChangesAsync();
-            return Ok(order);
+            Order newOrder = new Order(id, (OrderType)type, customerName, order.CreatedDate, username);
+            orderRepository.UpdateOrder(newOrder);
+            orderRepository.Save();
+            return Ok(newOrder);
         }
 
         // POST: api/HandleOrders
@@ -72,8 +70,8 @@ namespace coding_challenge.Controllers
 
             Order order = new Order(guid, orderType, customerName, createdDate, createdByUsername);
 
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+            orderRepository.InsertOrderAsync(order);
+            orderRepository.Save();
 
             return CreatedAtAction("GetOrders", new { id = order.Id }, order);
         }
@@ -81,7 +79,7 @@ namespace coding_challenge.Controllers
         [HttpGet("ByType/{type}")]
         public async Task<ActionResult<IEnumerable<Order>>> ByType(OrderType type)
         {
-            return await _context.Orders.Where(x => x.Type == type).ToListAsync();
+            return await orderRepository.GetOrdersByTaskAsync(type);
         }
 
         [HttpPost("Delete/{ids}")]
@@ -92,17 +90,13 @@ namespace coding_challenge.Controllers
             {
                 if (Guid.TryParse(stringId, out Guid id))
                 {
-                    if (!OrderExists(id))
+                    if (!orderRepository.OrderExists(id))
                     {
                         continue;
                     }
 
-                    Order deletingOrder = await _context.Orders.FirstOrDefaultAsync(e => e.Id == id);
-                    if (deletingOrder != null)
-                    {
-                        _context.Orders.Remove(deletingOrder);
-                        await _context.SaveChangesAsync();
-                    }
+                    await orderRepository.DeleteOrderAsync(id);
+                    orderRepository.Save();
                 }
                 else
                 {
@@ -113,10 +107,25 @@ namespace coding_challenge.Controllers
             return NoContent();
         }
 
-
-        private bool OrderExists(Guid id)
+        [HttpGet("Filter")]
+        public async Task<ActionResult<IEnumerable<Order>>> Filter(string? customerQuery = null, OrderType? type = null)
         {
-            return _context.Orders.Any(e => e.Id == id);
+            if (customerQuery == null && type == null)
+            {
+                return await GetOrders();
+            }
+            else if (customerQuery != null && type == null)
+            {
+                return await SearchOrders(customerQuery);
+            }
+            else if (customerQuery == null && type != null)
+            {
+                return await ByType((OrderType)type);
+            }
+            else
+            {
+                return await orderRepository.FilterOrdersAsync(customerQuery, (OrderType)type);
+            }
         }
     }
 }

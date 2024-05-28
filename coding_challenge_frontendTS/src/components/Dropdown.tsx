@@ -5,21 +5,17 @@ import { InputLabel } from '@mui/material';
 import * as React from 'react';
 
 interface DropdownProps {
-  fetchFilteredData: (type: number) => void;
   fetchAllData: () => void;
+  type: string;
+  setType: (type: string) => void;
 }
 
-export default function Dropdown({ fetchFilteredData, fetchAllData }: DropdownProps) {
-  const [type, setType] = React.useState('')
+export default function Dropdown({ fetchAllData, type, setType }: DropdownProps) {
 
   const handleChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
     const selectedValue = event.target.value as string;
     setType(selectedValue);
-    if (selectedValue === '') {
-      fetchAllData();
-    } else {
-      fetchFilteredData(parseInt(selectedValue, 10));
-    }
+    fetchAllData();
   }
 
   return (

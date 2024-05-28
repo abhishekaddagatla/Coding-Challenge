@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "APoCl2InPb8=",
+  "dgSpecHash": "l3VWSCl3pKw=",
   "success": true,
   "projectFilePath": "c:\\Users\\aaddagatla\\Documents\\Coding Challenge\\coding_challenge\\coding_challenge.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\aaddagatla\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\aaddagatla\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",
+    "C:\\Users\\aaddagatla\\.nuget\\packages\\bogus\\35.5.1\\bogus.35.5.1.nupkg.sha512",
     "C:\\Users\\aaddagatla\\.nuget\\packages\\humanizer\\2.14.1\\humanizer.2.14.1.nupkg.sha512",
     "C:\\Users\\aaddagatla\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\aaddagatla\\.nuget\\packages\\humanizer.core.af\\2.14.1\\humanizer.core.af.2.14.1.nupkg.sha512",
