@@ -108,24 +108,19 @@ namespace coding_challenge.Controllers
         }
 
         [HttpGet("Filter")]
-        public async Task<ActionResult<IEnumerable<Order>>> Filter(string? customerQuery = null, OrderType? type = null)
+        public async Task<ActionResult<IEnumerable<Order>>> Filter(
+            string? customerQuery = null,
+            OrderType? type = null,
+            int page = 1,
+            int pageSize = 10)
         {
-            if (customerQuery == null && type == null)
-            {
-                return await GetOrders();
-            }
-            else if (customerQuery != null && type == null)
-            {
-                return await SearchOrders(customerQuery);
-            }
-            else if (customerQuery == null && type != null)
-            {
-                return await ByType((OrderType)type);
-            }
-            else
-            {
-                return await orderRepository.FilterOrdersAsync(customerQuery, (OrderType)type);
-            }
+            var (orders, totalCount) = await orderRepository.FilterOrdersAsync(customerQuery, type, page, pageSize);
+
+            // Include the total count in the response headers
+            Response.Headers.Add("X-Total-Count", totalCount.ToString());
+
+            return Ok(orders);
         }
+
     }
 }

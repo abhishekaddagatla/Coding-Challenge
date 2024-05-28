@@ -27,7 +27,13 @@ const orderTypes = [
     { value: 'ReturnOrder', label: 'Return Order' },
 ];
 
-export default function CreateOrderModal({ refetch }: { refetch: () => void }) {
+interface CreateOrderModalProps {
+    refetch: (page: number, pageSize: number) => void;
+    page: number;
+    pageSize: number;
+}
+
+export default function CreateOrderModal({ refetch, page, pageSize }: CreateOrderModalProps) {
     const [open, setOpen] = useState(false);
     const [customer, setCustomer] = useState('');
     const [orderType, setOrderType] = useState('');
@@ -67,7 +73,7 @@ export default function CreateOrderModal({ refetch }: { refetch: () => void }) {
             type: "POST",
             url: "https://localhost:7298/api/Orders?" + queryString,
             success: function () {
-                refetch();
+                refetch(page, pageSize);
             }
         });
         handleClose();

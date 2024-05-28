@@ -75,9 +75,34 @@ namespace coding_challenge.DAL
             context.Entry(existingOrder).CurrentValues.SetValues(order);
         }
 
-        public async Task<List<Order>> FilterOrdersAsync(string customerQuery, OrderType type)
+        public async Task<(IEnumerable<Order> Orders, int totalCount)> FilterOrdersAsync(
+            string? customerQuery = null,
+            OrderType? type = null,
+            int page = 1,
+            int pageSize = 10)
         {
-            return await context.Orders.Where(e => e.CustomerName.Contains(customerQuery) && e.Type == type).ToListAsync();
+            IQueryable<Order> query = context.Orders;
+
+            // Apply filters
+            if (customerQuery != null)
+            {
+                query = query.Where(o => o.CustomerName.Contains(customerQuery));
+            }
+            if (type != null)
+            {
+                query = query.Where(o => o.Type == type);
+            }
+
+            // Get the total count of items before applying pagination
+            var totalCount = await query.CountAsync();
+
+            // Apply pagination
+            var orders = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (orders, totalCount);
         }
 
         // implementing IDisposable

@@ -12,10 +12,12 @@ interface EditOrderForm {
 interface EditOrderModalProps {
     editData: EditOrderForm;
     onClose: () => void;
-    refetch: () => void;
+    refetch: (page: number, pageSize: number) => void;
+    page: number;
+    pageSize: number;
 }
 
-const EditOrderModal: React.FC<EditOrderModalProps> = ({ editData: initialEditData, onClose, refetch }) => {
+const EditOrderModal: React.FC<EditOrderModalProps> = ({ editData: initialEditData, onClose, refetch, page, pageSize }) => {
     const [editData, setEditData] = useState<EditOrderForm>(initialEditData);
 
     useEffect(() => {
@@ -34,7 +36,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ editData: initialEditDa
             contentType: "application/json",
             success: function (data) {
                 console.log(data);
-                refetch();
+                refetch(page, pageSize);
             },
             error: function (err) {
                 console.log(err);
