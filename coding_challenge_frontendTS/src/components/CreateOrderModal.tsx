@@ -27,7 +27,14 @@ const orderTypes = [
     { value: 'ReturnOrder', label: 'Return Order' },
 ];
 
-export default function CreateOrderModal({ refetch }: { refetch: () => void }) {
+interface CreateOrderModalProps {
+    refetch: (page: number, pageSize: number) => void;
+    page: number;
+    pageSize: number;
+    email: string;
+}
+
+export default function CreateOrderModal({ refetch, page, pageSize, email }: CreateOrderModalProps) {
     const [open, setOpen] = useState(false);
     const [customer, setCustomer] = useState('');
     const [orderType, setOrderType] = useState('');
@@ -56,7 +63,7 @@ export default function CreateOrderModal({ refetch }: { refetch: () => void }) {
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         // Handle form submission logic here
-        const user = "Abhi"
+        const user = email.split('@')[0];
         const formData = {
             type: getOrderTypeInt(orderType.replace(/\s/g, '')),
             customerName: customer,
@@ -67,7 +74,7 @@ export default function CreateOrderModal({ refetch }: { refetch: () => void }) {
             type: "POST",
             url: "https://localhost:7298/api/Orders?" + queryString,
             success: function () {
-                refetch();
+                refetch(page, pageSize);
             }
         });
         handleClose();
