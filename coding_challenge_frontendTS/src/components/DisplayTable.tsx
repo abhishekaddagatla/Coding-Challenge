@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
-import { DataGrid, GridColDef, GridRowSelectionModel, GridRenderCellParams, useGridApiContext, useGridApiRef } from '@mui/x-data-grid';
+import React, { useEffect, useRef } from 'react';
+import { DataGrid, GridColDef, GridRowSelectionModel, GridRenderCellParams, useGridApiRef } from '@mui/x-data-grid';
 import { IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { Order } from './ParentComponent';
-
 
 interface DisplayTableProps {
   data: Order[];
@@ -41,12 +40,23 @@ const getEnumValueFromType = (type: string): number => {
   }
 };
 
-const DisplayTable: React.FC<DisplayTableProps> = ({ data, changeSelection, openEditModal, rowCount, page, pageSize, setPage, setPageSize }) => {
-  //const apiRef = useGridApiRef();
-  //useEffect(() => { apiRef.current.setPage(0) }, [data])
+const DisplayTable: React.FC<DisplayTableProps> = ({ data, changeSelection, openEditModal, rowCount: totalRowCount, page, pageSize, setPage, setPageSize }) => {
+  const apiRef = useGridApiRef();
+
+  // useEffect(() => {
+  //   apiRef.current.setPage(0);
+  // }, [data]);
+
+  const rowCountRef = useRef(totalRowCount || 0);
+  const rowCount = React.useMemo(() => {
+    if (totalRowCount !== undefined) {
+      rowCountRef.current = totalRowCount;
+    }
+    return rowCountRef.current;
+  }, [totalRowCount]);
 
   const handleEdit = (id: string, customer: string, type: string) => {
-    console.log('Edit button clicked for row id:', id);
+    //console.log('Edit button clicked for row id:', id);
     const enumValue = getEnumValueFromType(type);
     if (enumValue !== null) {
       openEditModal(id, customer, enumValue, true);
@@ -93,17 +103,17 @@ const DisplayTable: React.FC<DisplayTableProps> = ({ data, changeSelection, open
         pagination
         paginationMode="server"
         rowCount={rowCount}
-        pageSizeOptions={[10, 25, 50]}
+        pageSizeOptions={[10]}
+        paginationModel={{ page, pageSize }}
         onPaginationModelChange={(model) => {
           setPage(model.page);
           setPageSize(model.pageSize);
         }}
-        paginationModel={{ page, pageSize }}
         checkboxSelection
         disableRowSelectionOnClick
         disableColumnMenu
         onRowSelectionModelChange={changeSelection}
-        // apiRef={apiRef}
+        apiRef={apiRef}
         sx={{
           minHeight: '600px',
           '&, [class^=MuiDataGrid]': {
@@ -122,7 +132,6 @@ const DisplayTable: React.FC<DisplayTableProps> = ({ data, changeSelection, open
       />
     </div>
   );
-
 };
 
 export default DisplayTable;

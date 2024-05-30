@@ -10,10 +10,12 @@ namespace coding_challenge.DAL
     public class OrderRepository : IOrderRepository, IDisposable
     {
         private OrderContext context;
+        private readonly ILogger<OrderRepository> logger;
 
-        public OrderRepository(OrderContext context)
+        public OrderRepository(OrderContext context, ILogger<OrderRepository> logger)
         {
             this.context = context;
+            this.logger = logger;
         }
 
         // implementing IOrderRepository
@@ -76,34 +78,42 @@ namespace coding_challenge.DAL
         }
 
         public async Task<(IEnumerable<Order> Orders, int totalCount)> FilterOrdersAsync(
-            string? customerQuery = null,
-            OrderType? type = null,
-            int page = 1,
-            int pageSize = 10)
+        string? customerQuery = null,
+        OrderType? type = null,
+        int page = 1,
+        int pageSize = 10)
         {
-            IQueryable<Order> query = context.Orders;
-
-            // Apply filters
-            if (customerQuery != null)
+            try
             {
-                query = query.Where(o => o.CustomerName.Contains(customerQuery));
+                var query = context.Orders.AsQueryable();
+
+                if (!string.IsNullOrEmpty(customerQuery))
+                {
+                    query = query.Where(o => o.CustomerName.Contains(customerQuery));
+                }
+
+                if (type.HasValue)
+                {
+                    query = query.Where(o => o.Type == type.Value);
+                }
+
+                var totalCount = await query.CountAsync();
+
+                var orders = await query
+                    .OrderByDescending(o => o.CreatedDate)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return (orders, totalCount);
             }
-            if (type != null)
+            catch (Exception ex)
             {
-                query = query.Where(o => o.Type == type);
+                logger.LogError(ex, "An error occurred while filtering orders");
+                throw;
             }
-
-            // Get the total count of items before applying pagination
-            var totalCount = await query.CountAsync();
-
-            // Apply pagination
-            var orders = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return (orders, totalCount);
         }
+
 
         // implementing IDisposable
 

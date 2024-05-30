@@ -508,3 +508,5 @@ c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\obj\Debug\net8.0
 c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\obj\Debug\net8.0\ref\coding_challenge.dll
 c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\obj\Debug\net8.0\coding_challenge.sourcelink.json
 C:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\bin\Debug\net8.0\Bogus.dll
+C:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\bin\Debug\net8.0\Npgsql.dll
+C:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll

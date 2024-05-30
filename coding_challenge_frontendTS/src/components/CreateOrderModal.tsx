@@ -31,9 +31,10 @@ interface CreateOrderModalProps {
     refetch: (page: number, pageSize: number) => void;
     page: number;
     pageSize: number;
+    email: string;
 }
 
-export default function CreateOrderModal({ refetch, page, pageSize }: CreateOrderModalProps) {
+export default function CreateOrderModal({ refetch, page, pageSize, email }: CreateOrderModalProps) {
     const [open, setOpen] = useState(false);
     const [customer, setCustomer] = useState('');
     const [orderType, setOrderType] = useState('');
@@ -62,7 +63,7 @@ export default function CreateOrderModal({ refetch, page, pageSize }: CreateOrde
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         // Handle form submission logic here
-        const user = "Abhi"
+        const user = email.split('@')[0];
         const formData = {
             type: getOrderTypeInt(orderType.replace(/\s/g, '')),
             customerName: customer,
