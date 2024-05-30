@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using System.Numerics;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Azure.Identity;
 using coding_challenge.DAL;
+using Microsoft.Identity.Client;
 
 namespace coding_challenge.Controllers
 {
@@ -18,10 +20,11 @@ namespace coding_challenge.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderRepository orderRepository;
-
-        public OrdersController(OrderContext context, IOrderRepository orderRepository)
+        private readonly ILogger<OrdersController> logger;
+        public OrdersController(IOrderRepository orderRepository, ILogger<OrdersController> logger)
         {
             this.orderRepository = orderRepository;
+            this.logger = logger;
         }
 
         // GET: api/HandleOrders
@@ -51,6 +54,9 @@ namespace coding_challenge.Controllers
             Order newOrder = new Order(id, (OrderType)type, customerName, order.CreatedDate, username);
             orderRepository.UpdateOrder(newOrder);
             orderRepository.Save();
+
+            Debug.Assert(orderRepository.GetOrderById(id).Type == (OrderType)type && orderRepository.GetOrderById(id).CustomerName == customerName);
+
             return Ok(newOrder);
         }
 
@@ -73,13 +79,17 @@ namespace coding_challenge.Controllers
             orderRepository.InsertOrderAsync(order);
             orderRepository.Save();
 
+            Debug.Assert(orderRepository.OrderExists(guid));
+
             return CreatedAtAction("GetOrders", new { id = order.Id }, order);
         }
 
         [HttpGet("ByType/{type}")]
         public async Task<ActionResult<IEnumerable<Order>>> ByType(OrderType type)
         {
-            return await orderRepository.GetOrdersByTaskAsync(type);
+            var OrdersByType = await orderRepository.GetOrdersByTaskAsync(type);
+            Debug.Assert(OrdersByType.All(o => o.Type == type));
+            return OrdersByType;
         }
 
         [HttpPost("Delete/{ids}")]
@@ -96,6 +106,7 @@ namespace coding_challenge.Controllers
                     }
 
                     await orderRepository.DeleteOrderAsync(id);
+                    Debug.Assert(orderRepository.OrderExists(id) == false);
                     orderRepository.Save();
                 }
                 else
@@ -108,24 +119,32 @@ namespace coding_challenge.Controllers
         }
 
         [HttpGet("Filter")]
-        public async Task<ActionResult<IEnumerable<Order>>> Filter(string? customerQuery = null, OrderType? type = null)
+        public async Task<ActionResult> Filter(
+        string? customerQuery = null,
+        OrderType? type = null,
+        int page = 1,
+        int pageSize = 10)
         {
-            if (customerQuery == null && type == null)
+            try
             {
-                return await GetOrders();
+                var (orders, totalCount) = await orderRepository.FilterOrdersAsync(customerQuery, type, page, pageSize);
+
+                var response = new
+                {
+                    TotalCount = totalCount,
+                    Orders = orders
+                };
+                Debug.Assert(response.Orders.Count() <= pageSize && response.Orders.Count() <= response.TotalCount && response.Orders.Count() >= 0);
+
+                return Ok(response);
             }
-            else if (customerQuery != null && type == null)
+            catch (Exception ex)
             {
-                return await SearchOrders(customerQuery);
-            }
-            else if (customerQuery == null && type != null)
-            {
-                return await ByType((OrderType)type);
-            }
-            else
-            {
-                return await orderRepository.FilterOrdersAsync(customerQuery, (OrderType)type);
+                logger.LogError(ex, "An error occurred while filtering orders");
+                return StatusCode(500, "Internal server error");
             }
         }
+
+
     }
 }

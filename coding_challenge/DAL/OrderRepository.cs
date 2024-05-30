@@ -10,10 +10,12 @@ namespace coding_challenge.DAL
     public class OrderRepository : IOrderRepository, IDisposable
     {
         private OrderContext context;
+        private readonly ILogger<OrderRepository> logger;
 
-        public OrderRepository(OrderContext context)
+        public OrderRepository(OrderContext context, ILogger<OrderRepository> logger)
         {
             this.context = context;
+            this.logger = logger;
         }
 
         // implementing IOrderRepository
@@ -75,10 +77,43 @@ namespace coding_challenge.DAL
             context.Entry(existingOrder).CurrentValues.SetValues(order);
         }
 
-        public async Task<List<Order>> FilterOrdersAsync(string customerQuery, OrderType type)
+        public async Task<(IEnumerable<Order> Orders, int totalCount)> FilterOrdersAsync(
+        string? customerQuery = null,
+        OrderType? type = null,
+        int page = 1,
+        int pageSize = 10)
         {
-            return await context.Orders.Where(e => e.CustomerName.Contains(customerQuery) && e.Type == type).ToListAsync();
+            try
+            {
+                var query = context.Orders.AsQueryable();
+
+                if (!string.IsNullOrEmpty(customerQuery))
+                {
+                    query = query.Where(o => o.CustomerName.Contains(customerQuery));
+                }
+
+                if (type.HasValue)
+                {
+                    query = query.Where(o => o.Type == type.Value);
+                }
+
+                var totalCount = await query.CountAsync();
+
+                var orders = await query
+                    .OrderByDescending(o => o.CreatedDate)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return (orders, totalCount);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while filtering orders");
+                throw;
+            }
         }
+
 
         // implementing IDisposable
 
