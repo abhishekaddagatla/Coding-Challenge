@@ -10,14 +10,16 @@ interface EditOrderForm {
 }
 
 interface EditOrderModalProps {
+    fetchWrapper: (url: string, options: RequestInit) => Promise<any>;
     editData: EditOrderForm;
     onClose: () => void;
     refetch: (page: number, pageSize: number) => void;
     page: number;
     pageSize: number;
+    user: string;
 }
 
-const EditOrderModal: React.FC<EditOrderModalProps> = ({ editData: initialEditData, onClose, refetch, page, pageSize }) => {
+const EditOrderModal: React.FC<EditOrderModalProps> = ({ fetchWrapper, editData: initialEditData, onClose, refetch, page, pageSize, user }) => {
     const [editData, setEditData] = useState<EditOrderForm>(initialEditData);
 
     useEffect(() => {
@@ -28,21 +30,37 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ editData: initialEditDa
         return editData !== null && (editData.OrderID !== initialEditData.OrderID || editData.Customer !== initialEditData.Customer || editData.OrderType !== initialEditData.OrderType);
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         // makes a put call to the api
-        $.ajax({
-            url: "https://localhost:7298/api/Orders?id=" + encodeURIComponent(editData.OrderID) + "&type=" + encodeURIComponent(editData.OrderType) + "&customerName=" + encodeURIComponent(editData.Customer) + "&username=editor",
-            type: "PUT",
-            contentType: "application/json",
-            success: function (data) {
-                console.log(data);
-                refetch(page, pageSize);
-            },
-            error: function (err) {
-                console.log(err);
-            }
+        const body = JSON.stringify({
+            Id: editData.OrderID,
+            Type: editData.OrderType,
+            CustomerName: editData.Customer,
+            Username: user.split('@')[0]
         });
+        console.log(body)
+        try {
+            await fetchWrapper(`https://localhost:7298/api/Orders?id=` + encodeURIComponent(editData.OrderID) + "&type=" + encodeURIComponent(editData.OrderType) + "&customerName=" + encodeURIComponent(editData.Customer) + "&username=" + user.split('@')[0], {
+                method: 'PUT',
+            });
+            await refetch(page, pageSize);
+        } catch (error) {
+            console.error('Error updating order:', error);
+        }
         onClose();
+
+        // $.ajax({
+        //     url: "https://localhost:7298/api/Orders?id=" + encodeURIComponent(editData.OrderID) + "&type=" + encodeURIComponent(editData.OrderType) + "&customerName=" + encodeURIComponent(editData.Customer) + "&username=" + user.split('@')[0],
+        //     type: "PUT",
+        //     contentType: "application/json",
+        //     success: function (data) {
+        //         console.log(data);
+        //         refetch(page, pageSize);
+        //     },
+        //     error: function (err) {
+        //         console.log(err);
+        //     }
+        // });
     };
 
     const handleCancel = () => {

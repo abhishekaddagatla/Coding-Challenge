@@ -103,7 +103,7 @@ const DisplayTable: React.FC<DisplayTableProps> = ({ data, changeSelection, open
         pagination
         paginationMode="server"
         rowCount={rowCount}
-        pageSizeOptions={[10]}
+        pageSizeOptions={[11]}
         paginationModel={{ page, pageSize }}
         onPaginationModelChange={(model) => {
           setPage(model.page);

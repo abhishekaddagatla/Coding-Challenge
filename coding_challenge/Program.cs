@@ -1,9 +1,28 @@
+using System.Text;
 using coding_challenge.DAL;
 using coding_challenge.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
+
+var supabaseSignatureKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("6gilnH2auQwyaijwg2gpMoqs8RvY+D5dlOLEJVgvKUyhKxr20LC6cksYEzkbKiG90bfvnj+DfV7Mik2fkKbHTQ=="));
+var validIssuers = "https://bgjzrqctvozmutgbmgqy.supabase.co/auth/v1";
+var validAudiences = new List<string>() { "authenticated" };
+
+builder.Services.AddAuthentication().AddJwtBearer(o =>
+{
+    o.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = supabaseSignatureKey,
+        ValidAudiences = validAudiences,
+        ValidIssuer = validIssuers
+    };
+});
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
@@ -39,8 +58,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors(MyAllowSpecificOrigins);
-
-app.UseAuthorization();
 
 app.MapControllers();
 

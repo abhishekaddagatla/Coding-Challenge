@@ -28,13 +28,14 @@ const orderTypes = [
 ];
 
 interface CreateOrderModalProps {
+    fetchWrapper: (url: string, options: RequestInit) => Promise<any>;
     refetch: (page: number, pageSize: number) => void;
     page: number;
     pageSize: number;
     email: string;
 }
 
-export default function CreateOrderModal({ refetch, page, pageSize, email }: CreateOrderModalProps) {
+export default function CreateOrderModal({ fetchWrapper, refetch, page, pageSize, email }: CreateOrderModalProps) {
     const [open, setOpen] = useState(false);
     const [customer, setCustomer] = useState('');
     const [orderType, setOrderType] = useState('');
@@ -60,7 +61,7 @@ export default function CreateOrderModal({ refetch, page, pageSize, email }: Cre
         return orderTypeMap[orderType] ?? -1;
     }
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         // Handle form submission logic here
         const user = email.split('@')[0];
@@ -69,14 +70,17 @@ export default function CreateOrderModal({ refetch, page, pageSize, email }: Cre
             customerName: customer,
             username: user
         }
-        const queryString = $.param(formData); // Serialize formData into a query string
-        $.ajax({
-            type: "POST",
-            url: "https://localhost:7298/api/Orders?" + queryString,
-            success: function () {
-                refetch(page, pageSize);
-            }
-        });
+        // const queryString = $.param(formData); Serialize formData into a query string
+        try {
+            await fetchWrapper(`https://localhost:7298/api/Orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+        } catch (error) {
+            console.error('Error creating order:', error);
+        }
+        await refetch(page, pageSize);
         handleClose();
     };
 
