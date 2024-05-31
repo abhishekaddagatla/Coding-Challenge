@@ -9,7 +9,7 @@ interface SearchbarProps {
 export default function Searchbar({ searchTerm, setSearchTerm }: SearchbarProps) {
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', width: 400, height: "100%" }}>
+        <div style={{ display: 'flex', alignItems: 'end', width: 400, height: "100%" }}>
             <TextField
                 size="small"
                 label="Search"

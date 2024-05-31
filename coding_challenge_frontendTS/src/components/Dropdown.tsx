@@ -21,7 +21,7 @@ export default function Dropdown({ fetchAllData, type, setType, page, pageSize }
   }
 
   return (
-    <FormControl variant="standard" sx={{ minWidth: 150, height: "100%" }}>
+    <FormControl variant="standard" sx={{ minWidth: 150, height: "100%", mr: 2 }}>
       <InputLabel id="demo-simple-select-standard-label">Order Type</InputLabel>
       <Select
         labelId="demo-simple-select-standard-label"

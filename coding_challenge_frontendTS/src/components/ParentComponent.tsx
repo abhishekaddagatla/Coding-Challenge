@@ -9,6 +9,7 @@ import EditOrderModal from './EditOrderModal';
 import * as $ from "jquery";
 import { useSession } from '../SessionContext';
 import ToggleThemeIcon from './toggleThemeIcon';
+import DateFilter from './DateFilter';
 
 export interface Order {
     id: string,
@@ -51,7 +52,9 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
     const [type, setType] = useState('')
     const [rowCount, setRowCount] = useState(0);
     const [page, setPage] = useState(0);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(11);
+    const [startDate, setStartDate] = useState<string | null>(null);
+    const [endDate, setEndDate] = useState<string | null>(null);
 
     const { profile, signOut } = useSession();
 
@@ -74,17 +77,15 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
             if (type !== '') {
                 filters += `&type=${type}`;
             }
-            const response = await fetch(`https://localhost:7298/api/Orders${filters}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch data');
+            if (startDate != null && endDate != null) {
+                filters += `&startDate=${startDate}&endDate=${endDate}`;
             }
 
-            const result = await response.json();
-            // console.log(result)
-            const TotalCount = result.totalCount;
-            const Orders = result.orders;
+            const response = await fetchWrapper(`https://localhost:7298/api/Orders${filters}`, { method: 'GET' });
+
+            const TotalCount = response.totalCount;
+            const Orders = response.orders;
             setRowCount(TotalCount);
-            // console.log("TotalCount: ", TotalCount);
 
             const formattedData = Orders.map((row: any) => ({
                 ...row,
@@ -106,7 +107,7 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
     useEffect(() => {
         fetchData(page, pageSize);
         //console.log("Page: ", page, "PageSize: ", pageSize, "Type: ", type, "SearchTerm: ", searchTerm)
-    }, [page, pageSize, type]);
+    }, [page, pageSize, type, startDate, endDate]);
 
     // call for data when search term changes with a delay of 1 second
     useEffect(() => {
@@ -116,25 +117,19 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
         return () => clearTimeout(delayDebounceFn)
     }, [searchTerm])
 
-    const deleteRows = () => {
+    const deleteRows = async () => {
         // delete the rows
-        const rowIds = selectionModel.join(",");
-        $.ajax({
-            type: "POST",
-            url: "https://localhost:7298/api/Orders/Delete/" + rowIds,
-            success: function (data, textStatus, jqXHR) {
-                if (jqXHR && jqXHR.status === 204) {
-                    // Handle success
-                    fetchData(page, pageSize);
-                } else {
-                    // Handle other status codes or undefined jqXHR
-                    console.error("Unexpected response:", jqXHR);
-                }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.error("Error deleting rows:", errorThrown);
-            }
-        });
+        const rowIds = selectionModel.map((row) => row.toString());
+        try {
+            await fetchWrapper(`https://localhost:7298/api/Orders/Delete/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: rowIds })
+            });
+        } catch (error) {
+            console.error('Error deleting rows:', error);
+        }
+        await fetchData(page, pageSize);
     };
 
     const handleLogout = async () => {
@@ -144,35 +139,66 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
 
     return (
         <>
-            <div id='header' style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '1rem' }}>
-                    <Searchbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-                    <CreateOrderModal refetch={fetchData} page={page} pageSize={pageSize} email={profile?.email ?? ''} />
-                    <Button variant="outlined" sx={{ mr: 2, flexShrink: 0 }} onClick={deleteRows} color="error" disabled={selectionModel.length == 0}>Delete Selected</Button>
-                    <Dropdown fetchAllData={fetchData} type={type} setType={setType} page={page} pageSize={pageSize} />
+            <div id='wrapper' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div id='header' style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '1rem' }}>
+                        <Searchbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                        <CreateOrderModal fetchWrapper={fetchWrapper} refetch={fetchData} page={page} pageSize={pageSize} email={profile?.email ?? ''} />
+                        <Button variant="outlined" sx={{ mr: 2, flexShrink: 0 }} onClick={deleteRows} color="error" disabled={selectionModel.length == 0}>Delete Selected</Button>
+                        <Dropdown fetchAllData={fetchData} type={type} setType={setType} page={page} pageSize={pageSize} />
+                        <DateFilter setStartDate={setStartDate} setEndDate={setEndDate} theme={theme} />
+                    </div>
+                    <Button variant="text" size="small" onClick={toggleTheme}><ToggleThemeIcon theme={theme} /></Button>
                 </div>
-                <Button variant="text" size="small" onClick={toggleTheme}><ToggleThemeIcon theme={theme} /></Button>
-            </div>
-            <div>
-                <DisplayTable
-                    data={data}
-                    changeSelection={setSelectionModel}
-                    openEditModal={handleEditModalOpen}
-                    rowCount={rowCount}
-                    page={page}
-                    pageSize={pageSize}
-                    setPage={setPage}
-                    setPageSize={setPageSize}
-                />
-                <EditOrderModal editData={editModal} onClose={handleEditModalClose} refetch={fetchData} page={page} pageSize={pageSize}></EditOrderModal>
-            </div>
-            <div id='footer' style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                <p>© 2024 - All rights reserved</p>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                    <p style={{ marginBottom: 0 }}>Logged in as <i><b>{profile?.email.split('@')[0]}</b></i></p>
-                    <Button variant="text" size="small" color="error" sx={{ flexShrink: 0 }} onClick={handleLogout}>Logout</Button>
+                <div>
+                    <DisplayTable
+                        data={data}
+                        changeSelection={setSelectionModel}
+                        openEditModal={handleEditModalOpen}
+                        rowCount={rowCount}
+                        page={page}
+                        pageSize={pageSize}
+                        setPage={setPage}
+                        setPageSize={setPageSize}
+                    />
+                    <EditOrderModal fetchWrapper={fetchWrapper} editData={editModal} onClose={handleEditModalClose} refetch={fetchData} page={page} pageSize={pageSize} user={profile?.email ?? ''} />
+                </div>
+                <div id='footer' style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                    <p>© 2024 - All rights reserved</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <p style={{ marginBottom: 0 }}>Logged in as <i><b>{profile?.email.split('@')[0]}</b></i></p>
+                        <Button variant="text" size="small" color="error" sx={{ flexShrink: 0 }} onClick={handleLogout}>Logout</Button>
+                    </div>
                 </div>
             </div>
         </>
     );
+}
+
+async function fetchWrapper(url: string, options: RequestInit) {
+    const bearerToken = JSON.parse(localStorage.getItem('sb-bgjzrqctvozmutgbmgqy-auth-token') ?? '').access_token;
+    options['headers'] = {
+        ...options.headers,
+        "Authorization": `Bearer ${bearerToken}`
+    }
+
+    if (options.body && typeof options.body === 'object') {
+        options.body = JSON.stringify(options.body);
+    }
+
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message);
+        }
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return await response.json();
+        } else {
+            return null;
+        }
+    } catch (error) {
+        throw error;
+    }
 }
