@@ -80,12 +80,21 @@ namespace coding_challenge.DAL
         public async Task<(IEnumerable<Order> Orders, int totalCount)> FilterOrdersAsync(
         string? customerQuery = null,
         OrderType? type = null,
+        string? startDate = null,
+        string? endDate = null,
         int page = 1,
         int pageSize = 10)
         {
             try
             {
                 var query = context.Orders.AsQueryable();
+
+                if (startDate != null && endDate != null)
+                {
+                    DateTime start = DateTime.Parse(startDate);
+                    DateTime end = DateTime.Parse(endDate);
+                    query = query.Where(o => o.CreatedDate >= start && o.CreatedDate <= end);
+                }
 
                 if (!string.IsNullOrEmpty(customerQuery))
                 {

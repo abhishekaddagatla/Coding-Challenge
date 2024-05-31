@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Azure.Identity;
 using coding_challenge.DAL;
 using Microsoft.Identity.Client;
+using Microsoft.AspNetCore.Authorization;
 
 namespace coding_challenge.Controllers
 {
@@ -28,6 +29,7 @@ namespace coding_challenge.Controllers
         }
 
         // GET: api/HandleOrders
+
         [HttpGet]
         public async Task<List<Order>> GetOrders()
         {
@@ -42,6 +44,7 @@ namespace coding_challenge.Controllers
 
         // PUT: api/HandleOrders/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPut]
         public async Task<IActionResult> PutOrder(Guid id, int type, string customerName, string username)
         {
@@ -60,21 +63,29 @@ namespace coding_challenge.Controllers
             return Ok(newOrder);
         }
 
+        public class NewOrderRequest
+        {
+            public int Type { get; set; }
+            public string CustomerName { get; set; }
+            public string Username { get; set; }
+        }
+
         // POST: api/HandleOrders
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPost]
-        public async Task<ActionResult<Order>> PostOrder(int type, string customerName, string username)
+        public async Task<ActionResult<Order>> PostOrder([FromBody] NewOrderRequest newOrder)
         {
-            if (type < 0 || type > 4)
+            if (newOrder.Type < 0 || newOrder.Type > 4)
             {
                 return BadRequest();
             }
             Guid guid = Guid.NewGuid();
-            OrderType orderType = (OrderType)type;
+            OrderType orderType = (OrderType)newOrder.Type;
             DateTime createdDate = DateTime.Now;
-            string createdByUsername = username;
+            string createdByUsername = newOrder.Username;
 
-            Order order = new Order(guid, orderType, customerName, createdDate, createdByUsername);
+            Order order = new Order(guid, orderType, newOrder.CustomerName, createdDate, createdByUsername);
 
             orderRepository.InsertOrderAsync(order);
             orderRepository.Save();
@@ -92,11 +103,18 @@ namespace coding_challenge.Controllers
             return OrdersByType;
         }
 
-        [HttpPost("Delete/{ids}")]
-        public async Task<IActionResult> Delete(string ids)
+        public class DeleteRequest
         {
-            var idArray = ids.Split(',');
-            foreach (string stringId in idArray)
+            public List<string> Ids { get; set; }
+        }
+
+        [Authorize]
+        [HttpPost("Delete")]
+        public async Task<IActionResult> Delete([FromBody] DeleteRequest request)
+        {
+            var ids = request.Ids;
+            Console.WriteLine(ids);
+            foreach (string stringId in ids)
             {
                 if (Guid.TryParse(stringId, out Guid id))
                 {
@@ -106,8 +124,8 @@ namespace coding_challenge.Controllers
                     }
 
                     await orderRepository.DeleteOrderAsync(id);
-                    Debug.Assert(orderRepository.OrderExists(id) == false);
                     orderRepository.Save();
+                    Debug.Assert(orderRepository.OrderExists(id) == false);
                 }
                 else
                 {
@@ -118,16 +136,19 @@ namespace coding_challenge.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpGet("Filter")]
         public async Task<ActionResult> Filter(
         string? customerQuery = null,
         OrderType? type = null,
+        string? startDate = null,
+        string? endDate = null,
         int page = 1,
         int pageSize = 10)
         {
             try
             {
-                var (orders, totalCount) = await orderRepository.FilterOrdersAsync(customerQuery, type, page, pageSize);
+                var (orders, totalCount) = await orderRepository.FilterOrdersAsync(customerQuery, type, startDate, endDate, page, pageSize);
 
                 var response = new
                 {

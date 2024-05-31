@@ -510,3 +510,4 @@ c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\obj\Debug\net8.0
 C:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\bin\Debug\net8.0\Bogus.dll
 C:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\bin\Debug\net8.0\Npgsql.dll
 C:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+c:\Users\aaddagatla\Documents\Coding Challenge\coding_challenge\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
