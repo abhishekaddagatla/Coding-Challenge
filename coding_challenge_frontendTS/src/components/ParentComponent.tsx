@@ -1,4 +1,4 @@
-import { useState, useEffect, SetStateAction } from 'react';
+import { useState, useEffect } from 'react';
 import Dropdown from './Dropdown';
 import Searchbar from './Searchbar';
 import DisplayTable from './DisplayTable';
@@ -6,7 +6,6 @@ import CreateOrderModal from './CreateOrderModal';
 import Button from '@mui/material/Button';
 import { GridRowSelectionModel } from '@mui/x-data-grid';
 import EditOrderModal from './EditOrderModal';
-import * as $ from "jquery";
 import { useSession } from '../SessionContext';
 import ToggleThemeIcon from './toggleThemeIcon';
 import DateFilter from './DateFilter';
