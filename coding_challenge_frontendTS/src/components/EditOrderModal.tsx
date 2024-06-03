@@ -40,7 +40,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ fetchWrapper, editData:
         });
         console.log(body)
         try {
-            await fetchWrapper(`https://localhost:7298/api/Orders?id=` + encodeURIComponent(editData.OrderID) + "&type=" + encodeURIComponent(editData.OrderType) + "&customerName=" + encodeURIComponent(editData.Customer) + "&username=" + user.split('@')[0], {
+            await fetchWrapper(`http://localhost:7298/api/Orders?id=` + encodeURIComponent(editData.OrderID) + "&type=" + encodeURIComponent(editData.OrderType) + "&customerName=" + encodeURIComponent(editData.Customer) + "&username=" + user.split('@')[0], {
                 method: 'PUT',
             });
             await refetch(page, pageSize);

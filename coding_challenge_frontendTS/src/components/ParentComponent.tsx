@@ -80,7 +80,7 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
                 filters += `&startDate=${startDate}&endDate=${endDate}`;
             }
 
-            const response = await fetchWrapper(`https://localhost:7298/api/Orders${filters}`, { method: 'GET' });
+            const response = await fetchWrapper(`http://localhost:7298/api/Orders${filters}`, { method: 'GET' });
 
             const TotalCount = response.totalCount;
             const Orders = response.orders;
@@ -120,7 +120,7 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
         // delete the rows
         const rowIds = selectionModel.map((row) => row.toString());
         try {
-            await fetchWrapper(`https://localhost:7298/api/Orders/Delete/`, {
+            await fetchWrapper(`http://localhost:7298/api/Orders/Delete/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: rowIds })

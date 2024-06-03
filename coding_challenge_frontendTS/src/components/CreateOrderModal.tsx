@@ -72,7 +72,7 @@ export default function CreateOrderModal({ fetchWrapper, refetch, page, pageSize
         }
         // const queryString = $.param(formData); Serialize formData into a query string
         try {
-            await fetchWrapper(`https://localhost:7298/api/Orders`, {
+            await fetchWrapper(`http://localhost:7298/api/Orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

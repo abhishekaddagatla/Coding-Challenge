@@ -22,16 +22,15 @@ builder.Services.AddAuthentication().AddJwtBearer(o =>
     };
 });
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:5173")
+                          policy
+                            .AllowAnyOrigin()
                             .AllowAnyMethod()
-                            .AllowAnyHeader()
-                            .AllowCredentials();
+                            .AllowAnyHeader();
                       });
 });
 // Add services to the container.
