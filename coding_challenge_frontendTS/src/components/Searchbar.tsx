@@ -9,13 +9,13 @@ interface SearchbarProps {
 export default function Searchbar({ searchTerm, setSearchTerm }: SearchbarProps) {
 
     return (
-        <div style={{ display: 'flex', alignItems: 'end', width: 400, height: "100%" }}>
+        <div style={{ display: 'flex', alignItems: 'end', width: 400, height: "100%", marginRight: '1rem' }}>
             <TextField
                 size="small"
                 label="Search"
                 variant="outlined"
                 fullWidth
-                sx={{ bgcolor: 'transparent', mr: 1 }}
+                sx={{ bgcolor: 'transparent' }}
                 value={searchTerm} // Controlled component: value is set to searchTerm
                 onChange={(e) => setSearchTerm(e.target.value)} // Update searchTerm state on change
                 InputProps={{

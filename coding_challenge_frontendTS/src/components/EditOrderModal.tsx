@@ -99,7 +99,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ fetchWrapper, editData:
                 {/* A text field to edit Customer and a dropdown to edit OrderType*/}
                 <div style={{ display: 'flex', flexDirection: 'column', alignContent: 'center' }}>
                     <TextField label="Order ID" disabled defaultValue={initialEditData.OrderID} sx={{ width: '40ch', mb: 2 }}></TextField>
-                    <TextField label="Customer Name" defaultValue={initialEditData.Customer} sx={{ width: '40ch', mb: 2 }} onChange={handleCustomerChange}></TextField>
+                    <TextField autoFocus label="Customer Name" defaultValue={initialEditData.Customer} sx={{ width: '40ch', mb: 2 }} onChange={handleCustomerChange}></TextField>
                     <FormControl variant="standard" sx={{ width: '40ch', height: "100%" }}>
                         <InputLabel id="demo-simple-select-standard-label">Order Type</InputLabel>
                         <Select

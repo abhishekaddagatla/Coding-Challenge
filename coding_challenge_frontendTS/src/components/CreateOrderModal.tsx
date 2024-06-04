@@ -5,7 +5,6 @@ import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
-import * as $ from "jquery";
 
 const style = {
     position: 'absolute',
@@ -88,7 +87,7 @@ export default function CreateOrderModal({ fetchWrapper, refetch, page, pageSize
 
     return (
         <div>
-            <Button variant="outlined" onClick={handleOpen} sx={{ mr: 2, flexShrink: 0 }}>+ New Order</Button>
+            <Button variant="outlined" onClick={handleOpen} sx={{ mr: 2, flexShrink: 0, height: '40px' }}>+ New Order</Button>
             <Modal
                 open={open}
                 onClose={handleClose}
@@ -102,6 +101,7 @@ export default function CreateOrderModal({ fetchWrapper, refetch, page, pageSize
                     <form onSubmit={handleSubmit}>
                         <TextField
                             margin="normal"
+                            autoFocus
                             fullWidth
                             label="Customer"
                             id='customerField'
@@ -123,7 +123,7 @@ export default function CreateOrderModal({ fetchWrapper, refetch, page, pageSize
                                 </MenuItem>
                             ))}
                         </TextField>
-                        <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }} disabled={!isFormValid}>
+                        <Button type="submit" variant="contained" color="primary" sx={{ mt: 2, lineHeight: '28px' }} disabled={!isFormValid}>
                             Submit
                         </Button>
                     </form>

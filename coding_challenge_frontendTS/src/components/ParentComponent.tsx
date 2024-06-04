@@ -7,8 +7,12 @@ import Button from '@mui/material/Button';
 import { GridRowSelectionModel } from '@mui/x-data-grid';
 import EditOrderModal from './EditOrderModal';
 import { useSession } from '../SessionContext';
-import ToggleThemeIcon from './toggleThemeIcon';
 import DateFilter from './DateFilter';
+import CircularProgress from '@mui/material/CircularProgress';
+import ThemeSwitch from './ThemeSwitch';
+import Snackbar from '@mui/material/Snackbar';
+import DeleteAlert from './DeleteAlert';
+import { Tooltip } from '@mui/material';
 
 export interface Order {
     id: string,
@@ -51,9 +55,12 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
     const [type, setType] = useState('')
     const [rowCount, setRowCount] = useState(0);
     const [page, setPage] = useState(0);
-    const [pageSize, setPageSize] = useState(11);
+    const [pageSize, setPageSize] = useState(12);
     const [startDate, setStartDate] = useState<string | null>(null);
     const [endDate, setEndDate] = useState<string | null>(null);
+    const [firstLoadFinished, setFirstLoadFinished] = useState(false);
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [deleteMessage, setDeleteMessage] = useState('');
 
     const { profile, signOut } = useSession();
 
@@ -98,6 +105,7 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
             }));
 
             setData(formattedData);
+            setFirstLoadFinished(true);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -106,11 +114,17 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
     useEffect(() => {
         fetchData(page, pageSize);
         //console.log("Page: ", page, "PageSize: ", pageSize, "Type: ", type, "SearchTerm: ", searchTerm)
-    }, [page, pageSize, type, startDate, endDate]);
+    }, [page, pageSize]);
+
+    useEffect(() => {
+        setPage(0);
+        fetchData(page, pageSize);
+    }, [type, startDate, endDate]);
 
     // call for data when search term changes with a delay of 1 second
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
+            setPage(0);
             fetchData(page, pageSize);
         }, 1000)
         return () => clearTimeout(delayDebounceFn)
@@ -129,6 +143,8 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
             console.error('Error deleting rows:', error);
         }
         await fetchData(page, pageSize);
+        setDeleteMessage(selectionModel.length > 1 ? `${selectionModel.length} Orders Deleted` : `${selectionModel.length} Order Deleted`);
+        setAlertOpen(true);
     };
 
     const handleLogout = async () => {
@@ -136,40 +152,49 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
         window.location.href = '/';
     };
 
+    // fix circular progress showing up when there is no data
+    // should only show up while data is being fetched
     return (
         <>
-            <div id='wrapper' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div id='header' style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '1rem' }}>
-                        <Searchbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-                        <CreateOrderModal fetchWrapper={fetchWrapper} refetch={fetchData} page={page} pageSize={pageSize} email={profile?.email ?? ''} />
-                        <Button variant="outlined" sx={{ mr: 2, flexShrink: 0 }} onClick={deleteRows} color="error" disabled={selectionModel.length == 0}>Delete Selected</Button>
-                        <Dropdown fetchAllData={fetchData} type={type} setType={setType} page={page} pageSize={pageSize} />
-                        <DateFilter setStartDate={setStartDate} setEndDate={setEndDate} theme={theme} />
+            {data.length === 0 && !firstLoadFinished ? <CircularProgress style={{ position: 'absolute', top: '50%', left: '50%' }} /> :
+                <div id='wrapper' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div id='header' style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '1rem' }}>
+                            <Searchbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                            <CreateOrderModal fetchWrapper={fetchWrapper} refetch={fetchData} page={page} pageSize={pageSize} email={profile?.email ?? ''} />
+                            <Button variant="outlined" sx={{ mr: 2, flexShrink: 0, lineHeight: '28px' }} onClick={deleteRows} color="error" disabled={selectionModel.length == 0}>Delete Selected</Button>
+                            <Dropdown fetchAllData={fetchData} type={type} setType={setType} page={page} pageSize={pageSize} />
+                            <DateFilter setStartDate={setStartDate} setEndDate={setEndDate} theme={theme} />
+                        </div>
+                        <div style={{ height: '40px' }}>
+                            <ThemeSwitch toggleTheme={toggleTheme} />
+                        </div>
+                        {/* <Button variant="text" size="small" onClick={toggleTheme}><ToggleThemeIcon theme={theme} /></Button> */}
                     </div>
-                    <Button variant="text" size="small" onClick={toggleTheme}><ToggleThemeIcon theme={theme} /></Button>
-                </div>
-                <div>
-                    <DisplayTable
-                        data={data}
-                        changeSelection={setSelectionModel}
-                        openEditModal={handleEditModalOpen}
-                        rowCount={rowCount}
-                        page={page}
-                        pageSize={pageSize}
-                        setPage={setPage}
-                        setPageSize={setPageSize}
-                    />
-                    <EditOrderModal fetchWrapper={fetchWrapper} editData={editModal} onClose={handleEditModalClose} refetch={fetchData} page={page} pageSize={pageSize} user={profile?.email ?? ''} />
-                </div>
-                <div id='footer' style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                    <p>© 2024 - All rights reserved</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <p style={{ marginBottom: 0 }}>Logged in as <i><b>{profile?.email.split('@')[0]}</b></i></p>
-                        <Button variant="text" size="small" color="error" sx={{ flexShrink: 0 }} onClick={handleLogout}>Logout</Button>
+                    <div>
+                        <DisplayTable
+                            theme={theme}
+                            data={data}
+                            changeSelection={setSelectionModel}
+                            openEditModal={handleEditModalOpen}
+                            rowCount={rowCount}
+                            page={page}
+                            pageSize={pageSize}
+                            setPage={setPage}
+                            setPageSize={setPageSize}
+                        />
+                        <EditOrderModal fetchWrapper={fetchWrapper} editData={editModal} onClose={handleEditModalClose} refetch={fetchData} page={page} pageSize={pageSize} user={profile?.email ?? ''} />
+                        <DeleteAlert open={alertOpen} setOpen={setAlertOpen} message={deleteMessage} />
+                    </div>
+                    <div id='footer' style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                        <p>© 2024 - All rights reserved</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <p style={{ marginBottom: 0 }}>Logged in as <i><b>{profile?.email.split('@')[0]}</b></i></p>
+                            <Button variant="text" size="small" color="error" sx={{ flexShrink: 0 }} onClick={handleLogout}>Logout</Button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </>
     );
 }
