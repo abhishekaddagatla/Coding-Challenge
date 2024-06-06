@@ -10,9 +10,8 @@ import { useSession } from '../SessionContext';
 import DateFilter from './DateFilter';
 import CircularProgress from '@mui/material/CircularProgress';
 import ThemeSwitch from './ThemeSwitch';
-import Snackbar from '@mui/material/Snackbar';
-import DeleteAlert from './DeleteAlert';
-import { Tooltip } from '@mui/material';
+import Alert from './Alert';
+import '../assets/parentStyles.css'
 
 export interface Order {
     id: string,
@@ -60,11 +59,13 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
     const [endDate, setEndDate] = useState<string | null>(null);
     const [firstLoadFinished, setFirstLoadFinished] = useState(false);
     const [alertOpen, setAlertOpen] = useState(false);
-    const [deleteMessage, setDeleteMessage] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
 
     const { profile, signOut } = useSession();
 
     const handleEditModalClose = () => {
+        setAlertMessage('Order Updated Successfully');
+        setAlertOpen(true);
         setEditModal({ OrderID: "", Customer: "", OrderType: -1, isOpen: false });
     }
 
@@ -87,7 +88,7 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
                 filters += `&startDate=${startDate}&endDate=${endDate}`;
             }
 
-            const response = await fetchWrapper(`http://localhost:7298/api/Orders${filters}`, { method: 'GET' });
+            const response = await fetchWrapper(`https://coding-challenge-backend.happybush-8600bc6e.northcentralus.azurecontainerapps.io/api/Orders${filters}`, { method: 'GET' });
 
             const TotalCount = response.totalCount;
             const Orders = response.orders;
@@ -113,7 +114,6 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
 
     useEffect(() => {
         fetchData(page, pageSize);
-        //console.log("Page: ", page, "PageSize: ", pageSize, "Type: ", type, "SearchTerm: ", searchTerm)
     }, [page, pageSize]);
 
     useEffect(() => {
@@ -134,7 +134,7 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
         // delete the rows
         const rowIds = selectionModel.map((row) => row.toString());
         try {
-            await fetchWrapper(`http://localhost:7298/api/Orders/Delete/`, {
+            await fetchWrapper(`https://coding-challenge-backend.happybush-8600bc6e.northcentralus.azurecontainerapps.io/api/Orders/Delete/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: rowIds })
@@ -143,7 +143,7 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
             console.error('Error deleting rows:', error);
         }
         await fetchData(page, pageSize);
-        setDeleteMessage(selectionModel.length > 1 ? `${selectionModel.length} Orders Deleted` : `${selectionModel.length} Order Deleted`);
+        setAlertMessage(selectionModel.length > 1 ? `${selectionModel.length} Orders Deleted` : `${selectionModel.length} Order Deleted`);
         setAlertOpen(true);
     };
 
@@ -152,16 +152,14 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
         window.location.href = '/';
     };
 
-    // fix circular progress showing up when there is no data
-    // should only show up while data is being fetched
     return (
         <>
             {data.length === 0 && !firstLoadFinished ? <CircularProgress style={{ position: 'absolute', top: '50%', left: '50%' }} /> :
-                <div id='wrapper' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div id='header' style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '1rem' }}>
+                <div id='wrapper' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', }}>
+                    <div className='OuterHeader' style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div className='InnerHeader' style={{ display: 'flex', alignItems: 'flex-end', marginBottom: '1rem' }}>
                             <Searchbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-                            <CreateOrderModal fetchWrapper={fetchWrapper} refetch={fetchData} page={page} pageSize={pageSize} email={profile?.email ?? ''} />
+                            <CreateOrderModal setAlertMessage={setAlertMessage} setAlertOpen={setAlertOpen} fetchWrapper={fetchWrapper} refetch={fetchData} page={page} pageSize={pageSize} email={profile?.email ?? ''} />
                             <Button variant="outlined" sx={{ mr: 2, flexShrink: 0, lineHeight: '28px' }} onClick={deleteRows} color="error" disabled={selectionModel.length == 0}>Delete Selected</Button>
                             <Dropdown fetchAllData={fetchData} type={type} setType={setType} page={page} pageSize={pageSize} />
                             <DateFilter setStartDate={setStartDate} setEndDate={setEndDate} theme={theme} />
@@ -169,7 +167,6 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
                         <div style={{ height: '40px' }}>
                             <ThemeSwitch toggleTheme={toggleTheme} />
                         </div>
-                        {/* <Button variant="text" size="small" onClick={toggleTheme}><ToggleThemeIcon theme={theme} /></Button> */}
                     </div>
                     <div>
                         <DisplayTable
@@ -184,7 +181,7 @@ export default function ParentComponent({ toggleTheme, theme }: ParentComponentP
                             setPageSize={setPageSize}
                         />
                         <EditOrderModal fetchWrapper={fetchWrapper} editData={editModal} onClose={handleEditModalClose} refetch={fetchData} page={page} pageSize={pageSize} user={profile?.email ?? ''} />
-                        <DeleteAlert open={alertOpen} setOpen={setAlertOpen} message={deleteMessage} />
+                        <Alert open={alertOpen} setOpen={setAlertOpen} message={alertMessage} />
                     </div>
                     <div id='footer' style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                         <p>© 2024 - All rights reserved</p>

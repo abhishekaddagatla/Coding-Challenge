@@ -23,7 +23,7 @@ const DateFilter: React.FC<DateFilterProps> = ({ setStartDate, setEndDate, theme
 
     const handleCalendarChange = (dates: any, dateStrings: [string, string]) => {
         setStartDate(dates === null ? null : dates[0].$d.toISOString());
-        setEndDate(dates === null ? null : dates[1].$d.toISOString());
+        setEndDate(dates === null ? '' : new Date(dates[1].$d.setHours(23, 59, 59, 999)).toISOString());
     }
 
     function disabledDate(current: Dayjs) { // Update the type of the 'current' parameter to 'Dayjs'

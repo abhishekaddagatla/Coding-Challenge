@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Box, TextField, InputLabel, Select, MenuItem, FormControl, SelectChangeEvent } from '@mui/material';
-import $ from "jquery";
 
 interface EditOrderForm {
     OrderID: string;
@@ -21,6 +20,7 @@ interface EditOrderModalProps {
 
 const EditOrderModal: React.FC<EditOrderModalProps> = ({ fetchWrapper, editData: initialEditData, onClose, refetch, page, pageSize, user }) => {
     const [editData, setEditData] = useState<EditOrderForm>(initialEditData);
+    const [customerNameError, setCustomerNameError] = useState(false);
 
     useEffect(() => {
         setEditData(initialEditData);
@@ -31,6 +31,10 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ fetchWrapper, editData:
     }
 
     const handleSave = async () => {
+        if (checkEmpty(editData.Customer) || editData.OrderType === -1) {
+            setCustomerNameError(true);
+            return;
+        }
         // makes a put call to the api
         const body = JSON.stringify({
             Id: editData.OrderID,
@@ -40,7 +44,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ fetchWrapper, editData:
         });
         console.log(body)
         try {
-            await fetchWrapper(`http://localhost:7298/api/Orders?id=` + encodeURIComponent(editData.OrderID) + "&type=" + encodeURIComponent(editData.OrderType) + "&customerName=" + encodeURIComponent(editData.Customer) + "&username=" + user.split('@')[0], {
+            await fetchWrapper(`https://coding-challenge-backend.happybush-8600bc6e.northcentralus.azurecontainerapps.io/api/Orders?id=` + encodeURIComponent(editData.OrderID) + "&type=" + encodeURIComponent(editData.OrderType) + "&customerName=" + encodeURIComponent(editData.Customer) + "&username=" + user.split('@')[0], {
                 method: 'PUT',
             });
             await refetch(page, pageSize);
@@ -48,24 +52,15 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ fetchWrapper, editData:
             console.error('Error updating order:', error);
         }
         onClose();
-
-        // $.ajax({
-        //     url: "https://localhost:7298/api/Orders?id=" + encodeURIComponent(editData.OrderID) + "&type=" + encodeURIComponent(editData.OrderType) + "&customerName=" + encodeURIComponent(editData.Customer) + "&username=" + user.split('@')[0],
-        //     type: "PUT",
-        //     contentType: "application/json",
-        //     success: function (data) {
-        //         console.log(data);
-        //         refetch(page, pageSize);
-        //     },
-        //     error: function (err) {
-        //         console.log(err);
-        //     }
-        // });
     };
 
     const handleCancel = () => {
         onClose();
     };
+
+    const checkEmpty = (value: string) => {
+        return value === '' || value === null;
+    }
 
 
     const handleCustomerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,10 +91,9 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ fetchWrapper, editData:
                 }}
             >
                 <h2 style={{ marginTop: 0 }}>Edit Order</h2>
-                {/* A text field to edit Customer and a dropdown to edit OrderType*/}
                 <div style={{ display: 'flex', flexDirection: 'column', alignContent: 'center' }}>
                     <TextField label="Order ID" disabled defaultValue={initialEditData.OrderID} sx={{ width: '40ch', mb: 2 }}></TextField>
-                    <TextField autoFocus label="Customer Name" defaultValue={initialEditData.Customer} sx={{ width: '40ch', mb: 2 }} onChange={handleCustomerChange}></TextField>
+                    <TextField error={customerNameError} autoFocus label="Customer Name" defaultValue={initialEditData.Customer} sx={{ width: '40ch', mb: 2 }} onChange={handleCustomerChange}></TextField>
                     <FormControl variant="standard" sx={{ width: '40ch', height: "100%" }}>
                         <InputLabel id="demo-simple-select-standard-label">Order Type</InputLabel>
                         <Select

@@ -118,10 +118,6 @@ function CustomNoRowsOverlay() {
 const DisplayTable: React.FC<DisplayTableProps> = ({ data, changeSelection, openEditModal, rowCount: totalRowCount, page, pageSize, setPage, setPageSize }) => {
   const apiRef = useGridApiRef();
 
-  // useEffect(() => {
-  //   apiRef.current.setPage(0);
-  // }, [data]);
-
   const rowCountRef = useRef(totalRowCount || 0);
   const rowCount = React.useMemo(() => {
     if (totalRowCount !== undefined) {
@@ -131,7 +127,6 @@ const DisplayTable: React.FC<DisplayTableProps> = ({ data, changeSelection, open
   }, [totalRowCount]);
 
   const handleEdit = (id: string, customer: string, type: string) => {
-    //console.log('Edit button clicked for row id:', id);
     const enumValue = getEnumValueFromType(type);
     if (enumValue !== null) {
       openEditModal(id, customer, enumValue, true);

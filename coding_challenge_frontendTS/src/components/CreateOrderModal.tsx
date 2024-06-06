@@ -27,6 +27,8 @@ const orderTypes = [
 ];
 
 interface CreateOrderModalProps {
+    setAlertMessage: (message: string) => void;
+    setAlertOpen: (open: boolean) => void;
     fetchWrapper: (url: string, options: RequestInit) => Promise<any>;
     refetch: (page: number, pageSize: number) => void;
     page: number;
@@ -34,10 +36,15 @@ interface CreateOrderModalProps {
     email: string;
 }
 
-export default function CreateOrderModal({ fetchWrapper, refetch, page, pageSize, email }: CreateOrderModalProps) {
+export default function CreateOrderModal({ setAlertMessage, setAlertOpen, fetchWrapper, refetch, page, pageSize, email }: CreateOrderModalProps) {
     const [open, setOpen] = useState(false);
     const [customer, setCustomer] = useState('');
     const [orderType, setOrderType] = useState('');
+    const [customerNameError, setCustomerNameError] = useState(false);
+
+    const checkEmpty = (value: string) => {
+        return value === '' || value === null;
+    }
 
     const handleOpen = () => {
         setCustomer(''); // Reset customer state
@@ -69,9 +76,12 @@ export default function CreateOrderModal({ fetchWrapper, refetch, page, pageSize
             customerName: customer,
             username: user
         }
-        // const queryString = $.param(formData); Serialize formData into a query string
+        if (checkEmpty(customer)) {
+            setCustomerNameError(true);
+            return;
+        }
         try {
-            await fetchWrapper(`http://localhost:7298/api/Orders`, {
+            await fetchWrapper(`https://coding-challenge-backend.happybush-8600bc6e.northcentralus.azurecontainerapps.io/api/Orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -81,6 +91,8 @@ export default function CreateOrderModal({ fetchWrapper, refetch, page, pageSize
         }
         await refetch(page, pageSize);
         handleClose();
+        setAlertMessage('Order Created Successfully');
+        setAlertOpen(true);
     };
 
     const isFormValid = customer !== '' && orderType !== '';
@@ -101,6 +113,7 @@ export default function CreateOrderModal({ fetchWrapper, refetch, page, pageSize
                     <form onSubmit={handleSubmit}>
                         <TextField
                             margin="normal"
+                            error={customerNameError}
                             autoFocus
                             fullWidth
                             label="Customer"
