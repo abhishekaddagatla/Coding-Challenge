@@ -15,3 +15,4 @@ Learned a lot about React and front end design as well and back end design too.
 Example of an unauthorized request (postman):
 ![image](https://github.com/abhishekaddagatla/Coding-Challenge/assets/45775590/ce71495e-0f5a-4538-8eb9-ba168caf057f)
 
+I also want to give a thanks to everyone on the Red Tech team that was supportive and helped me with any issues that I may have ran into while building this project!
