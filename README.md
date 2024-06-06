@@ -15,4 +15,10 @@ Learned a lot about React and front end design as well and back end design too.
 Example of an unauthorized request (postman):
 ![image](https://github.com/abhishekaddagatla/Coding-Challenge/assets/45775590/ce71495e-0f5a-4538-8eb9-ba168caf057f)
 
-I also want to give a thanks to everyone on the Red Tech team that was supportive and helped me with any issues that I may have ran into while building this project!
+- After finishing up the app, I containerized it by using docker and deployed it to azure
+  - I ran into some issues getting the API endpoints to work once deployed because of CORS, https, etc. but ultimately it worked out fine
+ 
+I personally had a great time learning new technologies like Docker and React and figuring out how authentication works! I also want to give a thanks to everyone on the Red Tech team that was supportive and helped me with any issues that I may have ran into while building this project!
+
+
+abhi 2024
